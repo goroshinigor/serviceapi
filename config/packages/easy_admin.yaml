@@ -1,0 +1,15 @@
+easy_admin:
+    entities:
+        User:
+            label: 'user'
+            list:
+                 actions:
+                        - {name: 'delete', label: 'del' }
+                        - {name: 'edit' , lable: 'edite'}
+                 title: 'user'
+                 fields:
+                        - username
+                        - email
+                        - enabled
+                        - lastLogin
+            class: App\Infrastructure\Entity\User

@@ -1,0 +1,75 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    # Redis config
+    redis.ttl_default: '%env(TTL_DEFAULT)%'
+    redis.ttl_region: '%env(TTL_REGION)%'
+    redis.ttl_areas_region: '%env(TTL_AREAS_REGION)%'
+    redis.ttl_order_statuses: '%env(TTL_ORDER_STATUSES)%'
+    redis.ttl_order_statuses_history: '%env(TTL_ORDER_STATUSES_HISTORY)%'
+    redis.ttl_cities: '%env(TTL_CITIES)%'
+    redis.ttl_city_streets: '%env(TTL_CITY_STREETS)%'
+    redis.ttl_city_regions: '%env(TTL_CITY_REGIONS)%'
+    redis.ttl_documents_order_cancel: '%env(TTL_DOCUMENTS_ORDERS_CANCEL)%'
+    redis.ttl_branch_type: '%env(TTL_BRANCH_TYPE)%'
+    redis.ttl_req_departments: '%env(TTL_REQ_DEPARTMENTS)%'
+    redis.ttl_req_departments_lang: '%env(TTL_REQ_DEPARTMENTS_LANG)%'
+    entity_path: 'App\Domain\Entity'
+    # End of redis config
+
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Bundles,Kernel.php}'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    App\Infrastructure\Controller\:
+        resource: '../src/Infrastructure/Controller'
+        tags: ['controller.service_arguments']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    #Controllers
+
+    App\Infrastructure\Controller\ApiController:
+        #arguments: ['@App\', "@monolog.logger.api_log"]
+        tags:
+            - { name: monolog.logger, channel: "api_log" }
+
+    # Redis
+    App\Infrastructure\Services\Cache\CacheService:
+        arguments:
+            $cache_uri: 'redis://%env(REDIS_HOST)%'
+            $prefix: '%env(APP_ENV)%'
+            $ttl_param_array:
+                ttl_default: '%redis.ttl_default%'
+                ttl_region: '%redis.ttl_region%'
+                ttl_areas_region: '%redis.ttl_areas_region%'
+                ttl_order_statuses: '%redis.ttl_order_statuses%'
+                ttl_order_statuses_history: '%redis.ttl_order_statuses_history%'
+                ttl_cities: '%redis.ttl_cities%'
+                ttl_city_streets: '%redis.ttl_city_streets%'
+                ttl_city_regions: '%redis.ttl_city_regions%'
+                ttl_documents_order_cancel: '%redis.ttl_documents_order_cancel%'
+                ttl_branch_type: '%redis.ttl_branch_type%'
+                ttl_req_departments: '%redis.ttl_req_departments%'
+                ttl_req_departments_lang: '%redis.ttl_req_departments_lang%'
+    #Services
+
+    App\Domain\Services\Common\MethodNameFromRequest:
+    App\Infrastructure\Services\Legacy\ServiceAPIGeocoding:
+    App\Infrastructure\Services\Client\Info\GetClientInfoService:
+    App\Infrastructure\Services\Remote\CrmApiIntegration\Client\GetInfoService:

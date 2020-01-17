@@ -1,0 +1,26 @@
+parameters: 
+    request_required_fields:
+        login:
+            ru: "Пользователь не обнаружен в Базе, url: http://serviceapitest.justin.ua/img/no-results.gif"
+            ua: "Користувач не виявлений в Базі"
+            en: "User not found in DB"
+            code: 60004
+        sign:
+            ru: "Неправильная подпись пакета"
+            ua: "Неправильний підпис пакета"
+            en: "Incorrect sign of package"
+            code: 60003
+        method:
+            ru: "Не указан объект обработки и/или действие с объектом"
+            ua: "Не вказаний об'єкт обробки та / або дія з об'єктом"
+            en: "Object and/or action not found"
+            code: 60001
+services:
+    App\Bundles\JustinExceptionsBundle\EventListener\JustinExceptionListener:
+        arguments: 
+            - ['%request_required_fields%']
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+    App\Bundles\JustinExceptionsBundle\EventListener\JustinRequestListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request }
