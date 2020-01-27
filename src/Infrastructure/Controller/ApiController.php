@@ -113,7 +113,6 @@ class ApiController extends AbstractController
         ServiceAPIClientVerifyPhone $verifyPhoneService,
         GetClientInfoService $clientInfoService,
         EWCalculatorService $ewCalculatorService,
-        ServiceApiAddSendingToObserved $addSendingToObservedService,
         ServiceApiAddEwToObserved $addEwToObservedService,
         ServiceApiRemoveEwFromObserved $removeEwFromObservedService
     ){
@@ -125,7 +124,6 @@ class ApiController extends AbstractController
         $this->verifyPhoneService = $verifyPhoneService;
         $this->clientInfoService = $clientInfoService;
         $this->ewCalculatorService = $ewCalculatorService;
-        $this->addSendingToObservedService = $addSendingToObservedService;
         $this->addEwToObservedService = $addEwToObservedService;
         $this->removeEwFromObservedService = $removeEwFromObservedService;
         $logger->info('Api.Create', [
