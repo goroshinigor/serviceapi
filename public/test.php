@@ -206,7 +206,7 @@ $post = json_encode($p);
 
 $curl = curl_init();
 
-curl_setopt($curl, CURLOPT_URL, 'http://justin-service-api.local/');
+curl_setopt($curl, CURLOPT_URL, 'https://serviceapi.justin.ua');
 
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 0);
 curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); // не проверять SSL сертификат
