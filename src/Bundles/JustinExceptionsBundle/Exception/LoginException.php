@@ -50,4 +50,9 @@ class LoginException extends \Exception implements IJustinException
     {
         return self::UA_MESSAGE;
     }
+    
+    public function __construct() {
+        $message = self::RU_MESSAGE . '++' . self::UA_MESSAGE . '++' . self::EN_MESSAGE;
+        throw new \Exception($message, 60004, $previous);
+    }
 }

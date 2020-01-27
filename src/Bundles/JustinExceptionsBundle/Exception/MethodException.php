@@ -50,4 +50,16 @@ class MethodException extends \Exception implements IJustinException
     {
         return self::UA_MESSAGE;
     }
+
+    /**
+     * 
+     * @param string $message
+     * @param int $code
+     * @param \Throwable $previous
+     * @return \Exception
+     */
+    public function __construct() {
+        $message = self::RU_MESSAGE . '++' . self::UA_MESSAGE . '++' . self::EN_MESSAGE;
+        throw new \Exception($message, 60001, $previous);
+    }
 }
