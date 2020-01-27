@@ -8,7 +8,7 @@ use App\Infrastructure\Services\Remote\CrmApiIntegration\Client\CheckPhoneExistS
 use App\Infrastructure\Services\Remote\CrmApiIntegration\Client\GetInfoService;
 use App\Infrastructure\Services\Validation\ServiceValidatePhone;
 
-class ServiceApiAddSendingToObserved
+class ServiceApiAddEwToObserved
 {
     /**
      * @var string
@@ -67,7 +67,7 @@ class ServiceApiAddSendingToObserved
         $this->justinApiRequest = [
             "api_key" => $this->apiKey,
             "data" => [
-                "number" => $data['data']->EN_number,
+                "number" => $data['data']->ew_number,
                 "observer_phone" => $data['data']->phone_number,
                 "observer_FIO" => sprintf('%s %s %s', $clientInfo['last_name'], $clientInfo['first_name'], $clientInfo['middle_name'])
             ]

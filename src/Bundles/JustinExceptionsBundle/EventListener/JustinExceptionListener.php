@@ -35,6 +35,8 @@ class JustinExceptionListener
     public function onKernelException(ExceptionEvent $event)
     {
         $exception = $event->getThrowable();
+
+        $event->allowCustomResponseCode();
         if ($exception instanceof HttpExceptionInterface) {
             $response->setStatusCode($exception->getStatusCode());
             $response->headers->replace($exception->getHeaders());
@@ -82,7 +84,7 @@ class JustinExceptionListener
                         ),
                         new JustinExceptionResponseResultDTO(null)
                     )
-                );
+                ,200);
             } else {
                 $message = array_shift($messages);
                 $response = new JsonResponse(

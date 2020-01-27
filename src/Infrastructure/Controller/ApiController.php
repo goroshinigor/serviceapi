@@ -3,7 +3,8 @@
 namespace App\Infrastructure\Controller;
 
 use App\Domain\Exceptions\ClientNotFoundException;
-use App\Infrastructure\Services\Legacy\ServiceApiAddSendingToObserved;
+use App\Infrastructure\Services\Legacy\ServiceApiAddEwToObserved;
+use App\Infrastructure\Services\Legacy\ServiceApiRemoveEwFromObserved;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -82,9 +83,14 @@ class ApiController extends AbstractController
     private $verifyPhoneService;
 
     /**
-     * @var ServiceApiAddSendingToObserved
+     * @var ServiceApiAddEwToObserved
      */
-    private $addSendingToObservedService;
+    private $addEwToObservedService;
+
+    /**
+     * @var ServiceApiRemoveEwFromObserved
+     */
+    private $removeEwFromObservedService;
 
     /**
      *
@@ -95,7 +101,8 @@ class ApiController extends AbstractController
      * @param ServiceAPIGeocoding $geoService
      * @param ServiceAPIClientVerifyPhone $verifyPhoneService
      * @param GetClientInfoService $clientInfoService
-     * @param ServiceApiAddSendingToObserved $addSendingToObservedService
+     * @param ServiceApiAddEwToObserved $addEwToObservedService
+     * @param ServiceApiRemoveEwFromObserved $removeEwFromObservedService
      */
     public function __construct(
         LoggerInterface $logger,
@@ -106,9 +113,10 @@ class ApiController extends AbstractController
         ServiceAPIClientVerifyPhone $verifyPhoneService,
         GetClientInfoService $clientInfoService,
         EWCalculatorService $ewCalculatorService,
-        ServiceApiAddSendingToObserved $addSendingToObservedService
+        ServiceApiAddSendingToObserved $addSendingToObservedService,
+        ServiceApiAddEwToObserved $addEwToObservedService,
+        ServiceApiRemoveEwFromObserved $removeEwFromObservedService
     ){
-
         $this->logger = $logger;
         $this->cache = $cache;
         $this->request = $request->getCurrentRequest();
@@ -118,6 +126,8 @@ class ApiController extends AbstractController
         $this->clientInfoService = $clientInfoService;
         $this->ewCalculatorService = $ewCalculatorService;
         $this->addSendingToObservedService = $addSendingToObservedService;
+        $this->addEwToObservedService = $addEwToObservedService;
+        $this->removeEwFromObservedService = $removeEwFromObservedService;
         $logger->info('Api.Create', [
             'requestID' => $this->requestId,
             'route' => $_SERVER['REQUEST_URI'],
@@ -171,21 +181,28 @@ class ApiController extends AbstractController
     {
         $methodName = $this->methodNameService->get($this->request);
 
-        switch($methodName){
-            case 'add_sending_to_observed':
+        switch ($methodName) {
+            case 'remove_ew_from_observed':
                 return new JsonResponse(
                     new ServiceApiResponseDTO(
                         new ServiceApiResponseStatusDTO(true),
                         new ServiceApiResponseMessageDTO(),
                         new ServiceApiResponseResultDTO(
-                            $this->addSendingToObservedService->run($apiService)
+                            $this->removeEwFromObservedService->run($apiService)
+                        )
+                    ));
+            case 'add_ew_to_observed':
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(true),
+                        new ServiceApiResponseMessageDTO(),
+                        new ServiceApiResponseResultDTO(
+                            $this->addEwToObservedService->run($apiService)
                         )
                     ));
             case 'client_verify_phone':
                 $result = $this->verifyPhoneService->run($apiService);
-
                 return new JsonResponse($result, 200);
-
             case "branches_locator":
                 try {
                     return new JsonResponse(
@@ -220,21 +237,21 @@ class ApiController extends AbstractController
                     );
                 }
 
-            case "client_info":
-                return new JsonResponse(
-                    new ServiceApiResponseDTO(
-                        new ServiceApiResponseStatusDTO(1),
-                        new ServiceApiResponseMessageDTO(),
-                        $this->clientInfoService->get($apiService)
-                    )
-                );
-
             case "calculate_ew_price":
                 return new JsonResponse(
                     new ServiceApiResponseDTO(
                         new ServiceApiResponseStatusDTO(1),
                         new ServiceApiResponseMessageDTO(),
                         $this->ewCalculatorService->get($apiService)
+                    )
+                );
+
+            case "client_info":
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(1),
+                        new ServiceApiResponseMessageDTO(),
+                        $this->clientInfoService->get($apiService)
                     )
                 );
         }
