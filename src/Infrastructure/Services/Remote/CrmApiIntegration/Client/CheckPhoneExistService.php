@@ -2,8 +2,6 @@
 
 namespace App\Infrastructure\Services\Remote\CrmApiIntegration\Client;
 
-use App\Domain\Exceptions\ClientNotFoundException;
-
 class CheckPhoneExistService
 {
     /**
@@ -22,6 +20,7 @@ class CheckPhoneExistService
      * @param string $phoneNumber
      * @return bool
      * @throws ClientNotFoundException
+     * @throws \Exception
      */
     public function check(string $phoneNumber): string
     {
@@ -30,7 +29,7 @@ class CheckPhoneExistService
         );
         $res = json_decode($this->sendRequest($data), true);
         if ('success' == $res['resultType']) return $res['data']['memberId'];
-        throw new ClientNotFoundException();
+        throw new \Exception('Не удалось найти Клиента по указанному номеру телефона++Не вдалося знайти Клієнта за вказаним номером телефону++Could not find the Client at the specified phone number',60230);
     }
 
     /**

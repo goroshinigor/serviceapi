@@ -69,7 +69,33 @@ services:
                 ttl_req_departments_lang: '%redis.ttl_req_departments_lang%'
     #Services
 
-    App\Domain\Services\Common\MethodNameFromRequest:
+    #Common services
     App\Infrastructure\Services\Legacy\ServiceAPIGeocoding:
     App\Infrastructure\Services\Client\Info\GetClientInfoService:
+
+    #Remote intercommunication services
+    App\Infrastructure\Services\Remote\OpenApiIntegration\GetLocationService:
     App\Infrastructure\Services\Remote\CrmApiIntegration\Client\GetInfoService:
+
+    #Business logic services
+    App\Domain\Services\Common\MethodNameFromRequest:
+    App\Domain\Services\EW\EWCalculateSizeByDimensions:
+    App\Domain\Services\EstimatedCost\EstimatedCostComission:
+    App\Domain\Services\COD\CODComission:
+
+    App\Domain\Services\EW\EWCalculateSenderPrice:
+        arguments: 
+            - '@App\Domain\Services\COD\CODComission'
+
+    App\Domain\Services\EW\EWCalculateRecipientPrice:
+        arguments: 
+            - '@App\Domain\Services\COD\CODComission'
+
+    App\Infrastructure\Services\EW\EWCalculatorService:
+    App\Infrasctructure\Services\Shipping\DetermineShippingBounds:
+
+    App\Infrastructure\Services\Remote\CrmApiIntegration\Client\GetInfoService:
+
+    App\Domain\Services\Common\FromCommaToDot:
+
+    App\Infrastructure\Services\Locality\GetPointLocality:

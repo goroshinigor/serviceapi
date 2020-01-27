@@ -14,7 +14,7 @@ class ServiceApiResponseResultDTO {
      * 
      * @param array $resultData
      */
-    public function __construct($resultData)
+    public function __construct(array $resultData)
     {
         $this->resultData = $resultData;
     }

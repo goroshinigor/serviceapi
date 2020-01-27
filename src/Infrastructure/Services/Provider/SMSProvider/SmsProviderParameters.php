@@ -2,7 +2,6 @@
 
 namespace App\Infrastructure\Services\Provider\SMSProvider;
 
-use App\Domain\Exceptions\WrongPhoneNumberException;
 use App\Infrastructure\Services\Validation\ServiceValidatePhone;
 
 class SmsProviderParameters implements ISmsProviderParameters
@@ -25,20 +24,20 @@ class SmsProviderParameters implements ISmsProviderParameters
 
     /**
      * @param $data string
-     * @throws Exception
+     * @throws \Exception
      */
     private function setPhoneNumber($data)
     {
         if (ServiceValidatePhone::validate($data)) {
             $this->phoneNumber = $data;
         } else {
-            throw new WrongPhoneNumberException("Wrong phone number");
+            throw new \Exception('Указанный телефон не соответствует формату +380999999999++Зазначений телефон не відповідає формату +380999999999++The specified phone does not match the format +380999999999',60201);
         }
     }
 
     /**
      * @param $data string
-     * @throws Exception
+     * @throws \Exception
      */
     private function setSmsText($data)
     {

@@ -17,58 +17,83 @@ class JustinExceptionListener
 {
     /**
      *
-     * @var type 
+     * @var type
      */
     private $requiredFields;
-    
+
     /**
-     * 
+     *
      * @param type $requiredFields
      */
     public function __construct($requiredFields) {
         $this->requiredFields = array_shift($requiredFields);
     }
     /**
-     * 
+     *
      * @param ExceptionEvent $event
      */
     public function onKernelException(ExceptionEvent $event)
     {
         $exception = $event->getThrowable();
-
         if ($exception instanceof HttpExceptionInterface) {
             $response->setStatusCode($exception->getStatusCode());
             $response->headers->replace($exception->getHeaders());
         } elseif ($exception instanceof LoginException){
             $responseContent = $this->requiredFields['login'];
         } elseif ($exception instanceof SignException){
-            $responseContent = $this->requiredFields['sign'];      
+            $responseContent = $this->requiredFields['sign'];
         } elseif ($exception instanceof MethodException){
             $responseContent = $this->requiredFields['method'];
         } elseif ($exception->getCode() == 60001){
             $responseContent = $this->requiredFields['method'];
+                $response = new JsonResponse(
+                    new JustinExceptionResponseDTO(
+                        new JustinExceptionResponseStatusDTO(false),
+                        new JustinExceptionResponseMessageDTO(
+                            $responseContent['ru'],
+                            $responseContent['ua'],
+                            $responseContent['en'],
+                            $responseContent['code']
+                        ),
+                        new JustinExceptionResponseResultDTO(null)
+                    )
+                );
         } else {
-            $responseContent = [
-                'ru'=>$exception->getMessage(),
-                'ua'=>$exception->getMessage(),
-                'en'=>$exception->getTraceAsString(),
-                'code'=>$exception->getCode(),
-            ];
-        }
+            $messages = $exception->getMessage();
+            $trace = $exception->getTraceAsString();
+            $messages = explode('++', $messages);
 
-        $response = new JsonResponse(
-            new JustinExceptionResponseDTO(
-                new JustinExceptionResponseStatusDTO(false),
-                new JustinExceptionResponseMessageDTO(
-                    $responseContent['ru'],
-                    $responseContent['ua'],
-                    $responseContent['en'],
-                    $responseContent['code']
-                ),
-                new JustinExceptionResponseResultDTO(null)
-            )
-        );
-        
+            //check if Exception have 3 translations
+            if (3 == count($messages)) {
+                $responseContent = [
+                    'ru' => $messages[0],
+                    'ua' => $messages[1],
+                    'en' => $messages[2],
+                    'code' => $exception->getCode(),
+                ];
+                $response = new JsonResponse(
+                    new JustinExceptionResponseDTO(
+                        new JustinExceptionResponseStatusDTO(false),
+                        new JustinExceptionResponseMessageDTO(
+                            $responseContent['ru'],
+                            $responseContent['ua'],
+                            $responseContent['en'],
+                            $responseContent['code']
+                        ),
+                        new JustinExceptionResponseResultDTO(null)
+                    )
+                );
+            } else {
+                $message = array_shift($messages);
+                $response = new JsonResponse(
+                    new JustinExceptionResponseDTO(
+                        new JustinExceptionResponseStatusDTO(false),
+                        new JustinExceptionResponseMessageDTO($message, $message, $message, 0000),
+                        new JustinExceptionResponseResultDTO([$trace])
+                    )
+                );
+            }
+        }
         $event->setResponse($response);
     }
 }

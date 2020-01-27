@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Controller;
 
+use App\Domain\Exceptions\ClientNotFoundException;
 use App\Infrastructure\Services\Legacy\ServiceApiAddSendingToObserved;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,13 +15,13 @@ use App\Domain\DTO\ServiceApiResponseMessageDTO;
 use App\Domain\DTO\ServiceApiResponseResultDTO;
 use App\Domain\DTO\ServiceApiResponseStatusDTO;
 use App\Domain\Exceptions\AddressNotFoundException;
-use App\Domain\Exceptions\WrongPhoneNumberException;
 use App\Infrastructure\Services\Legacy\ServiceAPIClientVerifyPhone;
 use App\Infrastructure\Services\Api\ApiService;
 use App\Infrastructure\Services\Cache\CacheService;
 use App\Infrastructure\Services\Common\MethodNameFromRequest;
 use App\Infrastructure\Services\Legacy\ServiceAPIGeocoding;
 use App\Infrastructure\Services\Client\Info\GetClientInfoService;
+use App\Infrastructure\Services\EW\EWCalculatorService;
 use App\Domain\Exceptions\MethodException;
 
 /**
@@ -69,6 +70,13 @@ class ApiController extends AbstractController
     private $clientInfoService;
 
     /**
+     *
+     * @var type EwCalculatorService.
+     */
+    private $ewCalculatorService;
+
+    /**
+     * 
      * @var ServiceAPIClientVerifyPhone
      */
     private $verifyPhoneService;
@@ -97,9 +105,10 @@ class ApiController extends AbstractController
         ServiceAPIGeocoding $geoService,
         ServiceAPIClientVerifyPhone $verifyPhoneService,
         GetClientInfoService $clientInfoService,
+        EWCalculatorService $ewCalculatorService,
         ServiceApiAddSendingToObserved $addSendingToObservedService
-    )
-    {
+    ){
+
         $this->logger = $logger;
         $this->cache = $cache;
         $this->request = $request->getCurrentRequest();
@@ -107,6 +116,7 @@ class ApiController extends AbstractController
         $this->geoService = $geoService;
         $this->verifyPhoneService = $verifyPhoneService;
         $this->clientInfoService = $clientInfoService;
+        $this->ewCalculatorService = $ewCalculatorService;
         $this->addSendingToObservedService = $addSendingToObservedService;
         $logger->info('Api.Create', [
             'requestID' => $this->requestId,
@@ -128,12 +138,12 @@ class ApiController extends AbstractController
         $cachePath = $this->cache->createKeyNameByRequest($this->request);
 
         if ($apiService->isValid()) {
-            // $responseFromCache = $this->cache->get($cachePath);
-            //if (true == $responseFromCache) {
-            //  $response = $responseFromCache->get($cachePath);
-            //   } else {
+             $responseFromCache = $this->cache->get($cachePath);
+            if (true == $responseFromCache) {
+               $response = $responseFromCache->get($cachePath);
+              } else {
             $response = $this->getData($apiService);
-            //    }
+               }
             $ttl = $this->cache->getTtlByApiMethod($apiService->getApiMethod());
             $this->cache->set($cachePath, $response, $ttl);
         } else {
@@ -161,67 +171,19 @@ class ApiController extends AbstractController
     {
         $methodName = $this->methodNameService->get($this->request);
 
-        switch ($methodName) {
+        switch($methodName){
             case 'add_sending_to_observed':
-                try {
-                    $response =
-                        new ServiceApiResponseDTO(
-                            new ServiceApiResponseStatusDTO(true),
-                            new ServiceApiResponseMessageDTO(),
-                            new ServiceApiResponseResultDTO(
-                                $this->addSendingToObservedService->run($apiService)
-                            )
-                        );
-                } catch (WrongPhoneNumberException $e) {
-                    return new JsonResponse(
-                        new ServiceApiResponseDTO(
-                            new ServiceApiResponseStatusDTO(false),
-                            new ServiceApiResponseMessageDTO(
-                                "Указанный телефон не соответствует формату +380999999999",
-                                "Зазначений телефон не відповідає формату +380999999999",
-                                "The specified phone does not match the format +380999999999",
-                                60201
-                            ),
-                            new ServiceApiResponseResultDTO(null)
-                        )
-                    );
-                } catch (\Exception $e) {
-                    $response = new ServiceApiResponseDTO(
-                        new ServiceApiResponseStatusDTO(0),
-                        new ServiceApiResponseMessageDTO(null),
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(true),
+                        new ServiceApiResponseMessageDTO(),
                         new ServiceApiResponseResultDTO(
-                            (array)$e->getMessage()
+                            $this->addSendingToObservedService->run($apiService)
                         )
-                    );
-                    return new JsonResponse($response);
-                }
-                return new JsonResponse($response, 200);
+                    ));
             case 'client_verify_phone':
-                try {
-                    $result = $this->verifyPhoneService->run($apiService);
-                } catch (WrongPhoneNumberException $ex) {
-                    return new JsonResponse(
-                        new ServiceApiResponseDTO(
-                            new ServiceApiResponseStatusDTO(false),
-                            new ServiceApiResponseMessageDTO(
-                                "Указанный телефон не соответствует формату +380999999999",
-                                "Зазначений телефон не відповідає формату +380999999999",
-                                "The specified phone does not match the format +380999999999",
-                                60201
-                            ),
-                            new ServiceApiResponseResultDTO(null)
-                        )
-                    );
-                } catch (\Exception $e) {
-                    $response = new ServiceApiResponseDTO(
-                        new ServiceApiResponseStatusDTO(0),
-                        new ServiceApiResponseMessageDTO(null),
-                        new ServiceApiResponseResultDTO(
-                            (array)$e->getMessage()
-                        )
-                    );
-                    return new JsonResponse($response);
-                }
+                $result = $this->verifyPhoneService->run($apiService);
+
                 return new JsonResponse($result, 200);
 
             case "branches_locator":
@@ -264,6 +226,15 @@ class ApiController extends AbstractController
                         new ServiceApiResponseStatusDTO(1),
                         new ServiceApiResponseMessageDTO(),
                         $this->clientInfoService->get($apiService)
+                    )
+                );
+
+            case "calculate_ew_price":
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(1),
+                        new ServiceApiResponseMessageDTO(),
+                        $this->ewCalculatorService->get($apiService)
                     )
                 );
         }

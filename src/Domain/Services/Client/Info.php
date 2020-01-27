@@ -3,7 +3,7 @@
 namespace App\Domain\Services\Client;
 
 use App\Domain\DTO\ServiceApiResponseDTO;
-use App\Domain\Aggregates\Client;
+use App\Domain\Aggregates\Client\Client;
 
 /**
  * 

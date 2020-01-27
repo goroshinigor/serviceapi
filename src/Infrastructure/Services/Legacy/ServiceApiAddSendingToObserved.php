@@ -46,7 +46,7 @@ class ServiceApiAddSendingToObserved
         $data = (array)$apiService->getRequestParams();
 
         if (isset($data['data']->phone_number)) {
-            if (!$this->validatePhoneService::validate($data['data']->phone_number)) throw new WrongPhoneNumberException();
+            if (!$this->validatePhoneService::validate($data['data']->phone_number)) throw new \Exception('Указанный телефон не соответствует формату +380999999999++Зазначений телефон не відповідає формату +380999999999++The specified phone does not match the format +380999999999',60201);
             $memberId = $this->checkPhoneService->check($data['data']->phone_number);
             if (isset($memberId)) {
                 $clientInfo = $this->getInfoService->get($memberId);

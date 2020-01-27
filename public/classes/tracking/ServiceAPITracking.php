@@ -108,6 +108,18 @@ class ServiceAPITracking
             $this->phone = str_replace(')', '', $this->phone);
             $this->phone = str_replace('-', '', $this->phone);
         }
+        if ($this->phone) {
+            if (strlen($this->phone) != 12) {
+                $this->status = false;
+                $this->msg['code'] = 60606;
+            }
+
+            if(preg_match("/[a-zA-Zа-яА-Я]+/u",$this->phone)){
+                $this->status = false;
+                $this->msg['code'] = 60606;
+            }
+
+        }
 
     }
 
