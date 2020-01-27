@@ -2,8 +2,8 @@
 <?php
 return [
     'dbname' => 'serviceapitest',
-    'username' => 'u_serviceapihv',
-    'password' => '3k0rUlLayykq',
+    'username' => 'u_serviceapih',
+    'password' => 'RjTn21lWPREF',
     'hostname' => 'localhost',
     'sqlchar' => 'utf8',
 ];
