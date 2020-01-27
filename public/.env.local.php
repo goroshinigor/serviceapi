@@ -1,7 +1,7 @@
 
 <?php
 return [
-    'dbname' => 'serviceapitest',
+    'dbname' => 'serviceapi',
     'username' => 'u_serviceapih',
     'password' => 'RjTn21lWPREF',
     'hostname' => 'localhost',
