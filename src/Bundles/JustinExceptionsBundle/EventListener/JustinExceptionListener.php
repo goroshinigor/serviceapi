@@ -38,8 +38,7 @@ class JustinExceptionListener
 
         $event->allowCustomResponseCode();
         if ($exception instanceof HttpExceptionInterface) {
-                $messages = $exception->getMessage();
-                $message = array_shift($messages);
+                $message = $exception->getMessage();
                 $response = new JsonResponse(
                     new JustinExceptionResponseDTO(
                         new JustinExceptionResponseStatusDTO(false),
