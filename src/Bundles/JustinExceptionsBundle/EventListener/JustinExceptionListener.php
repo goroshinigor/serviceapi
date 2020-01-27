@@ -38,8 +38,18 @@ class JustinExceptionListener
 
         $event->allowCustomResponseCode();
         if ($exception instanceof HttpExceptionInterface) {
-            $response->setStatusCode($exception->getStatusCode());
-            $response->headers->replace($exception->getHeaders());
+                $messages = $exception->getMessage();
+                $message = array_shift($messages);
+                $response = new JsonResponse(
+                    new JustinExceptionResponseDTO(
+                        new JustinExceptionResponseStatusDTO(false),
+                        new JustinExceptionResponseMessageDTO($message, $message, $message, 0000),
+                        new JustinExceptionResponseResultDTO([$trace])
+                    )
+                );
+            
+//            $response->setStatusCode($exception->getStatusCode());
+//            $response->headers->replace($exception->getHeaders());
         } elseif ($exception instanceof LoginException){
             $responseContent = $this->requiredFields['login'];
         } elseif ($exception instanceof SignException){
