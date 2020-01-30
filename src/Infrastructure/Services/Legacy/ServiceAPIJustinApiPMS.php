@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Infrastructure\Services\Legacy;
+
 class ServiceAPIJustinApiPMS
 {
 
@@ -15,7 +17,7 @@ class ServiceAPIJustinApiPMS
 
     public $test_mode = "not_test";
 
-    function __construct($client_login = 'OPENAPI', $client_password = 'RIAneVEs', $language = 'UA', $test_mode = 'not_test')
+    function __construct($client_login = 'BigData', $client_password = 'eeFTxCQV', $language = 'UA', $test_mode = 'not_test')
     {
         $this->client_login = $client_login;
         $this->client_password = $client_password;

@@ -20,6 +20,7 @@ class JustinRequestListener {
     {
         try{
             $data = json_decode($event->getRequest()->getContent());
+            if ($data == null) throw new \Exception('Не валидный json++Не валідний json++Invalid json',00000);
             if(!isset($data->login) || empty($data->login)){
                 throw new LoginException();
             } elseif(!isset($data->sign) || empty($data->sign)){

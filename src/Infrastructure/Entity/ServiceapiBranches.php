@@ -119,5 +119,17 @@ class ServiceapiBranches
      */
     private $updatetime;
 
+    /**
+     * @var ServiceapiCity|null
+     *
+     * @ORM\ManyToOne(targetEntity="ServiceapiCity", inversedBy="branches")
+     * @ORM\JoinColumn(name="city_uuid", referencedColumnName="uuid" , nullable=false)
+     */
+    private $city;
+
+    public function getCity(): ServiceapiCity
+    {
+        return $this->city;
+    }
 
 }

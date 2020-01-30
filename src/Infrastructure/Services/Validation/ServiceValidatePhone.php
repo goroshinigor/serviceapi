@@ -36,7 +36,10 @@ class ServiceValidatePhone
             $errors[] = 1;
         }
 
-        if (0 === count($errors[0])) return true;
-        return false;
+        foreach ($errors as $error)
+        {
+            if (count($error) !== 0) throw new \Exception('Указанный телефон не соответствует формату +380999999999++Зазначений телефон не відповідає формату +380999999999++The specified phone does not match the format +380999999999',60201);
+        }
+        return true;
     }
 }

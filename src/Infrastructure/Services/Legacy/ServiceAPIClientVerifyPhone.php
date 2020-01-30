@@ -5,6 +5,7 @@ namespace App\Infrastructure\Services\Legacy;
 use App\Infrastructure\Services\Api\ApiService;
 use App\Infrastructure\Services\Provider\SmsProvider;
 use App\Infrastructure\Services\Provider\SMSProvider\SmsProviderParameters;
+use App\Infrastructure\Services\Validation\ServiceValidatePhone;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ServiceAPIClientVerifyPhone
@@ -23,9 +24,8 @@ class ServiceAPIClientVerifyPhone
      */
     private $data;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct()
     {
-        $this->connection = $entityManager->getConnection();
         $this->generateCode();
     }
 
@@ -49,6 +49,7 @@ class ServiceAPIClientVerifyPhone
         if (isset($this->data)) {
             $provider = new SmsProvider();
             $provider = $provider->getProvider();
+            ServiceValidatePhone::validate($this->data['data']->phone);
             $providerParameters = new SmsProviderParameters($this->data['data']->phone, $this->code);
             $res = (object)$res = $provider->send(1, $providerParameters);
             if (1 == $res->resultCode) {

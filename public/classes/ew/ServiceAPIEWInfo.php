@@ -26,7 +26,26 @@ class ServiceAPIEWInfo
         $p['date_from'] = (string)$data['filters']['date_from'];
         $p['date_to'] = (string)$data['filters']['date_to'];
 
+        // Додаткові фільтри
+        $p['ew_number'] = (string)$data['filters']['ew_number'];
+        $p['is_incoming'] = (string)$data['filters']['is_incoming'];
+        $p['is_archive'] = (string)$data['filters']['is_archive'];
+        $p['sender_department_city'] = (string)$data['filters']['sender_department_city'];
+        $p['receiver_department_city'] = (string)$data['filters']['receiver_department_city'];
+        $p['sender_department_number'] = (string)$data['filters']['sender_department_number'];
+        $p['receiver_department_number'] = (string)$data['filters']['receiver_department_number'];
+        $p['sender_name'] = (string)$data['filters']['sender_name'];
+        $p['receiver_name'] = (string)$data['filters']['receiver_name'];
+        $p['receiver_phone'] = (string)$data['filters']['receiver_phone'];
+        $p['sender_phone'] = (string)$data['filters']['sender_phone'];
+        $p['sender_city'] = (string)$data['filters']['sender_city'];
+        $p['receiver_city'] = (string)$data['filters']['receiver_city'];
+
+        $p['status_id'] = (string)$data['filters']['status_id'];
+
         $p['page'] = (int)$data['page'];
+
+        $p['sorting_date'] = (string)$data['sorting']['date'];
 
         $p = $this->checkData($p);
 
@@ -76,6 +95,70 @@ class ServiceAPIEWInfo
         if (strlen($p['phone']) < 12) {
             $this->status = false;
             $this->msg['code'] = 60506;
+        }
+
+        if (!empty($p['sender_phone'])) {
+            $p['sender_phone'] = str_replace('+', '', $p['sender_phone']);
+            $p['sender_phone'] = str_replace('(', '', $p['sender_phone']);
+            $p['sender_phone'] = str_replace(')', '', $p['sender_phone']);
+            $p['sender_phone'] = str_replace('-', '', $p['sender_phone']);
+            if (strlen($p['sender_phone']) < 12) {
+                $this->status = false;
+                $this->msg['code'] = 60506;
+            }
+        }
+        if (!empty($p['receiver_phone'])) {
+            $p['receiver_phone'] = str_replace('+', '', $p['receiver_phone']);
+            $p['receiver_phone'] = str_replace('(', '', $p['receiver_phone']);
+            $p['receiver_phone'] = str_replace(')', '', $p['receiver_phone']);
+            $p['receiver_phone'] = str_replace('-', '', $p['receiver_phone']);
+            if (strlen($p['receiver_phone']) < 12) {
+                $this->status = false;
+                $this->msg['code'] = 60506;
+            }
+        }
+
+        if (isset($p['is_incoming']) and $p['is_incoming'] != '') {
+            $p['is_incoming'] = (int)$p['is_incoming'];
+        } else {
+            $p['is_incoming'] = false;
+        }
+        if ($p['is_incoming'] > 1) {
+            $p['is_incoming'] = false;
+        }
+
+        if (isset($p['is_archive']) and $p['is_archive'] != '') {
+            $p['is_archive'] = (int)$p['is_archive'];
+        } else {
+            $p['is_archive'] = false;
+        }
+        if ($p['is_archive'] > 1) {
+            $p['is_archive'] = false;
+        }
+
+        // Перевіримо наявність латинських літер в прізвищі чи імені отримувача/відправника
+        if (preg_match('/\p{Latin}/u', $p['sender_name'])) {
+            $this->status = false;
+            $this->msg['code'] = 60507;
+        }
+        if (preg_match('/\p{Latin}/u', $p['receiver_name'])) {
+            $this->status = false;
+            $this->msg['code'] = 60507;
+        }
+        // Перевіримо наявність латинських літер населеному пункті
+        if (preg_match('/\p{Latin}/u', $p['sender_city'])) {
+            $this->status = false;
+            $this->msg['code'] = 60508;
+        }
+        if (preg_match('/\p{Latin}/u', $p['receiver_city'])) {
+            $this->status = false;
+            $this->msg['code'] = 60508;
+        }
+
+        if (strtolower($p['sorting_date']) == 'asc') {
+            $p['sorting_date'] = 'ASC';
+        } else {
+            $p['sorting_date'] = 'DESC';
         }
 
         return $p;
@@ -387,6 +470,8 @@ class ServiceAPIEWInfo
             $delivery_type = 'B2C';
         } elseif ($data['delivery_type'] == 2) {
             $delivery_type = 'C2C';
+        } elseif ($data['delivery_type'] == 3) {
+            $delivery_type = 'C2B';
         } else {
             $delivery_type = 'DeliveryPayment';
         }
@@ -519,18 +604,101 @@ class ServiceAPIEWInfo
 
         $this->result['ews'] = array();
 
-        $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM serviceapi_ew_info_detail_buffering WHERE basic_id = " . (int)$this->basic_id . " ORDER BY order_date DESC LIMIT " . ($data['page'] - 1) * $this->page_amount_buffering . ", " . $this->page_amount_buffering;
+        $filter_sql = '';
+
+        if ($data['is_incoming'] !== false) {
+            $filter_sql .= ' AND `is_incoming` = :is_incoming';
+        }
+        if ($data['is_archive'] !== false) {
+            $filter_sql .= ' AND `is_archive` = :is_archive';
+        }
+        if (!empty($data['ew_number'])) {
+            $filter_sql .= ' AND `ew_number` = :ew_number';
+        }
+        if (!empty($data['status_id'])) {
+            $filter_sql .= ' AND `status_id` = :status_id';
+        }
+        if (!empty($data['sender_phone'])) {
+            $filter_sql .= ' AND `sender_phone` = :sender_phone AND `is_incoming` = 1';
+        }
+        if (!empty($data['receiver_phone'])) {
+            $filter_sql .= ' AND `receiver_phone` = :receiver_phone AND `is_incoming` = 0';
+        }
+        if (!empty($data['sender_department_number'])) {
+            $filter_sql .= ' AND `sender_department_number` = :sender_department_number AND `is_incoming` = 1';
+        }
+        if (!empty($data['receiver_department_number'])) {
+            $filter_sql .= ' AND `receiver_department_number` = :receiver_department_number AND `is_incoming` = 0';
+        }
+        if (!empty($data['sender_name'])) {
+            $filter_sql .= ' AND (`sender_last_name` LIKE concat("%",:sender_name,"%") OR `sender_second_name` LIKE concat("%",:sender_name,"%") OR `sender_first_name` LIKE concat("%",:sender_name,"%")) AND `is_incoming` = 1';
+        }
+        if (!empty($data['receiver_name'])) {
+            $filter_sql .= ' AND (`receiver_last_name` LIKE concat("%",:receiver_name,"%") OR `receiver_second_name` LIKE concat("%",:receiver_name,"%") OR `receiver_first_name` LIKE concat("%",:receiver_name,"%")) AND `is_incoming` = 0';
+        }
+        if (!empty($data['sender_city'])) {
+            $filter_sql .= ' AND (`sender_department_city` LIKE concat("%",:sender_city,"%") OR `sender_department_address` LIKE concat("%",:sender_city,"%")) AND `is_incoming` = 1';
+        }
+        if (!empty($data['receiver_city'])) {
+            $filter_sql .= ' AND (`receiver_department_city` LIKE concat("%",:receiver_city,"%") OR `receiver_department_address` LIKE concat("%",:receiver_city,"%")) AND `is_incoming` = 0';
+        }
+
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM serviceapi_ew_info_detail_buffering WHERE 
+                `basic_id` = :basic_id 
+                " . $filter_sql . " 
+                ORDER BY order_date " . (string)$data['sorting_date'] . " 
+                LIMIT " . ($data['page'] - 1) * $this->page_amount_buffering . ", " . $this->page_amount_buffering;
+
+
+        $res = AtomAPIDB::r()->prepare($sql);
+        $res->bindValue('basic_id', (int)$this->basic_id);
+
+        if ($data['is_incoming'] !== false) {
+            $res->bindValue('is_incoming', (int)$data['is_incoming']);
+        }
+        if ($data['is_archive'] !== false) {
+            $res->bindValue('is_archive', (int)$data['is_archive']);
+        }
+        if (!empty($data['ew_number'])) {
+            $res->bindValue('ew_number', (string)$data['ew_number']);
+        }
+        if (!empty($data['status_id'])) {
+            $res->bindValue('status_id', (string)$data['status_id']);
+        }
+        if (!empty($data['sender_phone'])) {
+            $res->bindValue('sender_phone', (string)$data['sender_phone']);
+        }
+        if (!empty($data['receiver_phone'])) {
+            $res->bindValue('receiver_phone', (string)$data['receiver_phone']);
+        }
+        if (!empty($data['sender_department_number'])) {
+            $res->bindValue('sender_department_number', (string)$data['sender_department_number']);
+        }
+        if (!empty($data['receiver_department_number'])) {
+            $res->bindValue('receiver_department_number', (string)$data['receiver_department_number']);
+        }
+        if (!empty($data['sender_name'])) {
+            $res->bindValue('sender_name', (string)$data['sender_name']);
+        }
+        if (!empty($data['receiver_name'])) {
+            $res->bindValue('receiver_name', (string)$data['receiver_name']);
+        }
+        if (!empty($data['sender_city'])) {
+            $res->bindValue('sender_city', (string)$data['sender_city']);
+        }
+        if (!empty($data['receiver_city'])) {
+            $res->bindValue('receiver_city', (string)$data['receiver_city']);
+        }
+
+        $res->execute();
 
         // Записуємо інформацію в масив
-        $res = AtomAPIDB::query($sql);
         while ($r = $res->fetch(PDO::FETCH_ASSOC)) {
             unset($r['basic_id']);
             unset($r['id']);
             $this->result['ews'][] = $r;
         }
-
-        $titles = array_column($this->result['ews'], 'order_date');
-        array_multisort($titles, SORT_DESC, $this->result['ews']);
 
         $objects_count = AtomAPIDB::r()->query("SELECT FOUND_ROWS();")->fetchColumn();
 
@@ -540,6 +708,13 @@ class ServiceAPIEWInfo
             'pages' => ceil($objects_count / $this->page_amount_buffering),
             'page_amount' => $this->page_amount_buffering
         );
+
+        if (empty($this->result['ews'])) {
+            $this->status = false;
+            $this->msg['code'] = 60510;
+            $this->result = null;
+        }
+
     }
 
 

@@ -1,2 +1,2 @@
-maker:
-    root_namespace: 'App\Infrastructure'
+#maker:
+#    root_namespace: 'App\Infrastructure'

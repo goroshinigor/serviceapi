@@ -3,8 +3,11 @@
 namespace App\Infrastructure\Controller;
 
 use App\Domain\Exceptions\ClientNotFoundException;
+use App\Infrastructure\Services\Legacy\ServiceAPILocalities;
 use App\Infrastructure\Services\Legacy\ServiceApiAddEwToObserved;
+use App\Infrastructure\Services\Legacy\ServiceApiGetObserversList;
 use App\Infrastructure\Services\Legacy\ServiceApiRemoveEwFromObserved;
+use App\Infrastructure\Services\Legacy\ServiceApiSendMessageService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -77,7 +80,7 @@ class ApiController extends AbstractController
     private $ewCalculatorService;
 
     /**
-     * 
+     *
      * @var ServiceAPIClientVerifyPhone
      */
     private $verifyPhoneService;
@@ -93,6 +96,16 @@ class ApiController extends AbstractController
     private $removeEwFromObservedService;
 
     /**
+     * @var ServiceAPILocalities
+     * @since 21.01.2020
+     */
+    private $serviceAPILocalities;
+
+    private $getObserversListService;
+
+    private $sendMessageService;
+
+    /**
      *
      * @param LoggerInterface $logger
      * @param CacheService $cache
@@ -101,8 +114,12 @@ class ApiController extends AbstractController
      * @param ServiceAPIGeocoding $geoService
      * @param ServiceAPIClientVerifyPhone $verifyPhoneService
      * @param GetClientInfoService $clientInfoService
+     * @param EWCalculatorService $ewCalculatorService
      * @param ServiceApiAddEwToObserved $addEwToObservedService
      * @param ServiceApiRemoveEwFromObserved $removeEwFromObservedService
+     * @param ServiceAPILocalities $serviceAPILocalities
+     * @param ServiceApiGetObserversList $getObserversListService
+     * @param ServiceApiSendMessageService $sendMessageService
      */
     public function __construct(
         LoggerInterface $logger,
@@ -114,7 +131,10 @@ class ApiController extends AbstractController
         GetClientInfoService $clientInfoService,
         EWCalculatorService $ewCalculatorService,
         ServiceApiAddEwToObserved $addEwToObservedService,
-        ServiceApiRemoveEwFromObserved $removeEwFromObservedService
+        ServiceApiRemoveEwFromObserved $removeEwFromObservedService,
+        ServiceApiGetObserversList $getObserversListService,
+        ServiceApiSendMessageService $sendMessageService,
+        ServiceAPILocalities $serviceAPILocalities
     ){
         $this->logger = $logger;
         $this->cache = $cache;
@@ -123,9 +143,12 @@ class ApiController extends AbstractController
         $this->geoService = $geoService;
         $this->verifyPhoneService = $verifyPhoneService;
         $this->clientInfoService = $clientInfoService;
+        $this->serviceAPILocalities = $serviceAPILocalities;
         $this->ewCalculatorService = $ewCalculatorService;
         $this->addEwToObservedService = $addEwToObservedService;
         $this->removeEwFromObservedService = $removeEwFromObservedService;
+        $this->getObserversListService = $getObserversListService;
+        $this->sendMessageService = $sendMessageService;
         $logger->info('Api.Create', [
             'requestID' => $this->requestId,
             'route' => $_SERVER['REQUEST_URI'],
@@ -174,12 +197,33 @@ class ApiController extends AbstractController
      *
      * @param ApiService $apiService
      * @return Response
+     * @throws \Exception
      */
     private function getData(ApiService $apiService)
     {
         $methodName = $this->methodNameService->get($this->request);
 
         switch ($methodName) {
+            case 'send_message':
+                $result = $this->sendMessageService->run($apiService);
+                if ($result) $code = 1;
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO($code ?? 0),
+                        new ServiceApiResponseMessageDTO(),
+                        new ServiceApiResponseResultDTO(
+                            []
+                        )
+                    ));
+            case 'get_observers_list':
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(true),
+                        new ServiceApiResponseMessageDTO(),
+                        new ServiceApiResponseResultDTO(
+                            $this->getObserversListService->run($apiService)
+                        )
+                    ));
             case 'remove_ew_from_observed':
                 return new JsonResponse(
                     new ServiceApiResponseDTO(
@@ -252,6 +296,14 @@ class ApiController extends AbstractController
                         $this->clientInfoService->get($apiService)
                     )
                 );
+
+            case "localities":
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(1),
+                        new ServiceApiResponseMessageDTO(),
+                        $this->serviceAPILocalities->get($apiService)
+                    ));
         }
 
         throw new \Exception('Object and/or action not found', 60001);

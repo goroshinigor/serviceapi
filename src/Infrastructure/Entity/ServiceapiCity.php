@@ -58,6 +58,17 @@ class ServiceapiCity implements ICity
      */
     private $updatedAt;
 
+    /**
+     * @var ServiceapiRegion|null
+     *
+     */
+    private $region;
+
+    public function getRegion(): ServiceapiRegion
+    {
+        return $this->region;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
