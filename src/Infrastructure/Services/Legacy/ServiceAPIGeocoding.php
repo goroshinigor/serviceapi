@@ -294,6 +294,23 @@ class ServiceAPIGeocoding
                 $branch_info['public'] = json_decode($branch_info['public']);
                 $branch_info['photos'] = json_decode($branch_info['photos'], true);
                 $branch_info['services'] = json_decode($branch_info['services']);
+                switch ($branch_info['format']){
+                    case '18f03930-56a6-11e9-80c7-525400fb7782':
+                            //MiniOSR
+                            $branch_info['format'] = 'MiniOSR';
+                        break;
+                    case '2b97c20e-56a6-11e9-80c7-525400fb7782':
+                            //OSR
+                            $branch_info['format'] = 'OSR';
+                        break;
+                    case 'f92bc2e8-56a5-11e9-80c7-525400fb7782':
+                    default:
+                            //SMART
+                            $branch_info['format'] = 'SMART';
+                        break;
+                }
+                $branch_info['format'] = 'Відділення';
+                unset($branch_info['id']);
                 unset($branch_info['updatetime']);
                 $branch_info['distance'] = round($number['distance'],2);
                 $this->result[] = $branch_info;
