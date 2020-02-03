@@ -48,4 +48,13 @@ class MethodException extends \Exception
     {
         return self::UA_MESSAGE;
     }
+
+    /**
+     * 
+     * @throws \Exception
+     */
+    public function __construct() {
+        $message = self::RU_MESSAGE . '++' . self::UA_MESSAGE . '++' . self::EN_MESSAGE;
+        throw new \Exception($message, 60004);
+    }
 }

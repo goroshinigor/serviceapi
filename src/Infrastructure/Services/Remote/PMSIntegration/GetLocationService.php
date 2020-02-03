@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Services\Remote\OpenApiIntegration;
+namespace App\Infrastructure\Services\Remote\PMSIntegration;
 
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Psr7\Response as GuzzleHttpResponse;

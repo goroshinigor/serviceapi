@@ -5,7 +5,7 @@ namespace App\Infrastructure\Services\Shipping;
 use App\Domain\Queries\CalculateEWPriceQuery;
 use App\Infrastructure\Entity\ServiceapiCity;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Infrastructure\Services\Remote\OpenApiIntegration\GetLocationService;
+use App\Infrastructure\Services\Remote\PMSIntegration\GetLocationService;
 
 /**
  * Description of DetermineShippingBounds

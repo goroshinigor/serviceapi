@@ -27,6 +27,7 @@ use App\Infrastructure\Services\Legacy\ServiceAPIGeocoding;
 use App\Infrastructure\Services\Client\Info\GetClientInfoService;
 use App\Infrastructure\Services\EW\EWCalculatorService;
 use App\Domain\Exceptions\MethodException;
+use App\Infrastructure\Services\Legacy\ServiceAPITracking;
 
 /**
  * ApiController.
@@ -101,6 +102,11 @@ class ApiController extends AbstractController
      */
     private $serviceAPILocalities;
 
+    /**
+     * @var ServiceAPITracking
+     */
+    private $serviceAPITracking;
+
     private $getObserversListService;
 
     private $sendMessageService;
@@ -114,6 +120,8 @@ class ApiController extends AbstractController
      * @param ServiceAPIGeocoding $geoService
      * @param ServiceAPIClientVerifyPhone $verifyPhoneService
      * @param GetClientInfoService $clientInfoService
+     * @param ServiceAPITracking $serviceAPITracking
+     * @param EWCalculatorService $ewCalculatorService
      * @param EWCalculatorService $ewCalculatorService
      * @param ServiceApiAddEwToObserved $addEwToObservedService
      * @param ServiceApiRemoveEwFromObserved $removeEwFromObservedService
@@ -129,6 +137,7 @@ class ApiController extends AbstractController
         ServiceAPIGeocoding $geoService,
         ServiceAPIClientVerifyPhone $verifyPhoneService,
         GetClientInfoService $clientInfoService,
+        ServiceAPITracking $serviceAPITracking,
         EWCalculatorService $ewCalculatorService,
         ServiceApiAddEwToObserved $addEwToObservedService,
         ServiceApiRemoveEwFromObserved $removeEwFromObservedService,
@@ -143,6 +152,7 @@ class ApiController extends AbstractController
         $this->geoService = $geoService;
         $this->verifyPhoneService = $verifyPhoneService;
         $this->clientInfoService = $clientInfoService;
+        $this->serviceAPITracking = $serviceAPITracking;
         $this->serviceAPILocalities = $serviceAPILocalities;
         $this->ewCalculatorService = $ewCalculatorService;
         $this->addEwToObservedService = $addEwToObservedService;
@@ -304,6 +314,15 @@ class ApiController extends AbstractController
                         new ServiceApiResponseMessageDTO(),
                         $this->serviceAPILocalities->get($apiService)
                     ));
+
+            case "tracking":
+                return new JsonResponse(
+                    new ServiceApiResponseDTO(
+                        new ServiceApiResponseStatusDTO(1),
+                        new ServiceApiResponseMessageDTO(),
+                        $this->serviceAPITracking->run($apiService)
+                    )
+                );
         }
 
         throw new \Exception('Object and/or action not found', 60001);

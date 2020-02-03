@@ -7,7 +7,7 @@ use App\Infrastructure\Entity\ServiceapiCity;
 use \App\Domain\ValueObjects\City\ICity;
 use App\Infrastructure\Services\Api\ApiService;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Infrastructure\Services\Remote\OpenApiIntegration\GetLocationService;
+use App\Infrastructure\Services\Remote\PMSIntegration\GetLocationService;
 use App\Domain\ValueObjects\Route\PackageRoute;
 use App\Domain\Exceptions\LocationNotFoundException;
 

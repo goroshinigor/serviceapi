@@ -51,22 +51,22 @@ class ServiceApiGetObserversList
      * @param ServiceValidatePhone $validatePhoneService
      * @param ServiceApiStatusesList $statusesListService
      */
-    public function __construct(CheckPhoneExistService $checkPhoneService, GetInfoService $getInfoService, ServiceValidatePhone $validatePhoneService)
+    public function __construct(CheckPhoneExistService $checkPhoneService, GetInfoService $getInfoService, ServiceValidatePhone $validatePhoneService, ServiceApiStatusesList $statusesListService)
     {
         $this->apiResponse['status'] = false;
         $this->checkPhoneService = $checkPhoneService;
         $this->getInfoService = $getInfoService;
         $this->validatePhoneService = $validatePhoneService;
         $this->authToken = base64_encode("$this->apiLogin:$this->apiPassword");
-        $this->statusesListService = new ServiceApiStatusesList();
+        $this->statusesListService = $statusesListService;
         $pattern = sprintf('%s:%s', $this->apiPassword, date('yy-m-d'));
         $this->sign = sha1($pattern);
     }
 
     public function run(ApiService $apiService)
     {
+        $this->deliveryStatusesList = $this->statusesListService->run();
         $data = (array)$apiService->getRequestParams();
-        $this->deliveryStatusesList = $this->statusesListService->getResult();
         $this->validatePhoneService->validate($data['data']->phone_number);
         $memberId = $this->checkPhoneService->check($data['data']->phone_number);
         if (isset($memberId)) {
@@ -82,6 +82,7 @@ class ServiceApiGetObserversList
 
     private function formApiResponse($data)
     {
+        unset($this->apiResponse['status']);
         foreach ($data['Orders'] as $key => $order) {
             $this->formGetDataRequest($order);
             $response = $this->sendRequest($this->getDataRequest, $this->apiUrlGetData);

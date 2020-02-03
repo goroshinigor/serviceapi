@@ -65,9 +65,9 @@ class ServiceAPILocalities
 
             $this->validate($path);
 
-            $result = $this->getFromDB($path);
+            $result = $this->getFromOpenApi($path);
         } else {
-            $result = $this->getFromDB();
+            $result = $this->getFromOpenApi();
         }
 
         return new ServiceApiResponseResultDTO($result);
@@ -120,7 +120,8 @@ class ServiceAPILocalities
         if ($response instanceof ResponseInterface && 200 == $cod) {
             $body = $response->getBody();
             $content = $body->getContents();
-            return $this->isJson($content) ? json_decode($content) : $content;
+            $result = $this->isJson($content) ? json_decode($content) : $content;
+            return $result->result;
         } else {
             throw new \Exception('Произошел системный сбой платформы. Обратитесь в службу поддержки++Стався системний збій платформи. Зверніться в службу підтримки', 60020);
         }

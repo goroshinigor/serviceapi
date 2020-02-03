@@ -74,7 +74,7 @@ services:
     App\Infrastructure\Services\Client\Info\GetClientInfoService:
 
     #Remote intercommunication services
-    App\Infrastructure\Services\Remote\OpenApiIntegration\GetLocationService:
+    App\Infrastructure\Services\Remote\PMSIntegration\GetLocationService:
     App\Infrastructure\Services\Remote\CrmApiIntegration\Client\GetInfoService:
 
     #Business logic services
@@ -99,3 +99,8 @@ services:
     App\Domain\Services\Common\FromCommaToDot:
 
     App\Infrastructure\Services\Locality\GetPointLocality:
+    App\Infrastructure\Services\Remote\PMSIntegration\PMSFetcher:
+    App\Infrastructure\Services\Remote\PMSIntegration\Authorization\GenerateSignFromPassword:
+    # Commands
+
+    App\Infrastructure\Services\Remote\PMSIntegration\UpdateBranchesFromPMSCommand:
