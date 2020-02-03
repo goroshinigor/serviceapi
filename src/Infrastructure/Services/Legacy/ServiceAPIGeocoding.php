@@ -309,7 +309,7 @@ class ServiceAPIGeocoding
                             $branch_info['format'] = 'SMART';
                         break;
                 }
-                $branch_info['format'] = 'Відділення';
+                $branch_info['type'] = 'Відділення';
                 unset($branch_info['id']);
                 unset($branch_info['updatetime']);
                 $branch_info['distance'] = round($number['distance'],2);
